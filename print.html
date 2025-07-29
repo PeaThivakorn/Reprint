@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>พิมพ์ฉลาก</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/jsbarcode@3.11.4/dist/JsBarcode.all.min.js"></script>
+</head>
+<body style="width: 161mm;">
+
+    <div id="label-container"></div>
+
+    <script>
+        const query = new URLSearchParams(window.location.search);
+        const product = query.get('product') || 'battery';
+        const count = parseInt(query.get('count')) || 1;
+        const today = new Date().toLocaleDateString('th-TH');
+
+        // ข้อมูลสินค้า
+        const productMap = {
+            battery: {
+                name: 'ถ่าน for M/B CR2032 (ถ่านกระดุม)',
+                barcode: '4500000000'
+            },
+            ribbon: {
+                name: 'REFILL RIBBON EPSON LQ-1170 (7755)',
+                barcode: '4500000024'
+            }
+        };
+
+        const productInfo = productMap[product] || {
+            name: 'ไม่พบรายการสินค้า',
+            barcode: '0000000000'
+        };
+
+        // Template ฉลากเดี่ยว
+        const labelItemHTML = () => `
+            <div>
+                <span style="display: block; float: left;">
+                    <img style="width: 50px;" src="https://img.advice.co.th/images_nas/advice/oneweb/assets/images/logo-Advice-Black.png">
+                </span>
+                <span style="display: block; float: left; font-size: 9px; width: 105px; overflow: hidden; text-overflow: ellipsis; margin-left: 5px; height: 25px;">
+                    ${productInfo.name}
+                </span>
+            </div>
+            <div style="text-align: center; margin-top: 3px;">
+                <img class="barcode0" style="width: 150px;" src="">
+                <div style="font-size: 9px; margin-top: 3px; margin-bottom: 3px;">
+                    ${productInfo.barcode} # 0D | <span class="current-date">${today}</span>
+                </div>
+            </div>
+        `;
+
+        const container = document.getElementById('label-container');
+        let html = '';
+        for (let i = 0; i < count; i += 2) {
+            html += `
+                <div style="display: block; float: left; width: 52mm; margin: 3px;">
+                    <div class="page">
+                        ${labelItemHTML()}
+                        ${i + 1 < count ? labelItemHTML() : ''}
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+
+        // สร้าง barcode
+        JsBarcode(".barcode0", productInfo.barcode, {
+            displayValue: false,
+            format: "CODE128",
+            height: 25,
+            width: 2,
+            font: "Tahoma",
+            margin: 1
+        });
+
+        // พิมพ์อัตโนมัติ
+        window.onload = () => setTimeout(() => window.print(), 500);
+    </script>
+</body>
+</html>
